@@ -1,0 +1,14 @@
+# Local-only, never committed
+CLAUDE.md
+
+# Build output
+build/
+DerivedData/
+
+# Xcode
+*.xcuserstate
+xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# macOS
+.DS_Store
