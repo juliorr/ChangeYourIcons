@@ -108,13 +108,6 @@ struct ContentView: View {
             }
         }
 
-        if target.isSystemProtected {
-            Label("System app protected by SIP: its icon can't be changed.",
-                  systemImage: "lock.fill")
-                .font(.callout)
-                .foregroundStyle(.orange)
-        }
-
         VStack(spacing: 8) {
             Button {
                 if let icon = state.lastDownloadedIcon {
@@ -147,14 +140,69 @@ struct ContentView: View {
                 .foregroundStyle(state.isError ? Color.red : Color.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if state.needsPermission {
+            permissionCard
+        }
+    }
+
+    @ViewBuilder
+    private var permissionCard: some View {
+        switch state.permissionHint {
+        case .appManagement:
+            VStack(alignment: .leading, spacing: 8) {
+                Label("ChangeYourIcons needs the “App Management” permission",
+                      systemImage: "exclamationmark.triangle.fill")
+                    .font(.callout).bold()
+                    .foregroundStyle(.orange)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    permissionStep(1, "Click **Open Settings** below.")
+                    permissionStep(2, "Turn on **ChangeYourIcons** under *Privacy & Security → App Management*.")
+                    permissionStep(3, "Come back here and click **Apply**.")
+                }
+
+                Text("After you rebuild the app, macOS may ask for this permission again (the ad-hoc signature changes on every build).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 Button {
                     state.openAppManagementSettings()
                 } label: {
-                    Label("Open Settings → Privacy → App Management", systemImage: "gearshape")
+                    Label("Open Settings", systemImage: "gearshape")
+                        .frame(maxWidth: .infinity)
                 }
-                .controlSize(.small)
+                .controlSize(.large)
             }
+            .padding(12)
+            .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+
+        case .sip:
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Protected by System Integrity Protection (SIP)",
+                      systemImage: "lock.fill")
+                    .font(.callout).bold()
+                    .foregroundStyle(.orange)
+                Text("Apps in the system folder can't have their icon changed. This is a macOS security protection and there is no setting to allow it.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(12)
+            .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+
+        case .none:
+            EmptyView()
+        }
+    }
+
+    private func permissionStep(_ number: Int, _ text: LocalizedStringKey) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("\(number).")
+                .font(.callout).monospacedDigit()
+                .foregroundStyle(.secondary)
+            Text(text)
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

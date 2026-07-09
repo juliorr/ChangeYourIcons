@@ -24,12 +24,18 @@ struct AppTarget: Identifiable, Equatable {
     }
 }
 
+enum PermissionHint {
+    case none          // todo OK
+    case appManagement // falta permiso "Gestión de apps"
+    case sip           // app protegida por SIP, sin solución
+}
+
 final class AppState: ObservableObject {
     @Published var target: AppTarget?
     @Published var lastDownloadedIcon: URL?
     @Published var status: String = "Choose an app and find an icon on macosicons.com."
     @Published var isError: Bool = false
-    @Published var needsPermission: Bool = false
+    @Published var permissionHint: PermissionHint = .none
 
     @Published var dockApps: [AppTarget] = []
     @Published var installedApps: [AppTarget] = []
@@ -55,6 +61,11 @@ final class AppState: ObservableObject {
         target = app
         if app.isSystemProtected {
             setStatus("“\(app.name)” is protected by SIP; its icon can't be changed.", error: true)
+            permissionHint = .sip
+        } else if !applier.canWriteToBundle(app.url) {
+            // Detección proactiva: falta el permiso "Gestión de apps" antes de intentar aplicar.
+            setStatus("ChangeYourIcons needs the “App Management” permission to modify “\(app.name)”.", error: true)
+            permissionHint = .appManagement
         } else if let icon = lastDownloadedIcon {
             setStatus("“\(app.name)” selected. Click “Apply” to use the last downloaded icon (\(icon.lastPathComponent)).")
         } else {
@@ -66,14 +77,14 @@ final class AppState: ObservableObject {
     func setStatus(_ message: String, error: Bool = false) {
         self.status = message
         self.isError = error
-        self.needsPermission = false
+        self.permissionHint = .none
     }
 
     @MainActor
     private func setError(_ error: Error, prefix: String) {
         self.status = "\(prefix): \(error.localizedDescription)"
         self.isError = true
-        self.needsPermission = (error as? IconError)?.isPermissionIssue ?? false
+        self.permissionHint = ((error as? IconError)?.isPermissionIssue ?? false) ? .appManagement : .none
     }
 
     func openAppManagementSettings() {
@@ -94,6 +105,7 @@ final class AppState: ObservableObject {
         }
         if target.isSystemProtected {
             setStatus("“\(target.name)” is protected by SIP and its icon can't be changed.", error: true)
+            permissionHint = .sip
             return
         }
         do {
