@@ -49,14 +49,19 @@ struct IconApplier {
         touch(appURL)
     }
 
-    private func classifyWriteFailure(_ appURL: URL) -> IconError {
+    /// True si podemos escribir dentro del bundle (App Management concedido / no requerido).
+    /// Sondea creando y borrando un fichero oculto de 1 byte dentro del bundle.
+    func canWriteToBundle(_ appURL: URL) -> Bool {
         let probe = appURL.appendingPathComponent(".changeyouricons_probe")
-        let created = FileManager.default.createFile(atPath: probe.path, contents: Data([0]))
-        if created {
-            try? FileManager.default.removeItem(at: probe)
-            return .setIconFailed(appURL.path)
+        guard FileManager.default.createFile(atPath: probe.path, contents: Data([0])) else {
+            return false
         }
-        return .appManagementDenied(appURL.path)
+        try? FileManager.default.removeItem(at: probe)
+        return true
+    }
+
+    private func classifyWriteFailure(_ appURL: URL) -> IconError {
+        canWriteToBundle(appURL) ? .setIconFailed(appURL.path) : .appManagementDenied(appURL.path)
     }
 
     private func touch(_ url: URL) {
