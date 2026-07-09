@@ -70,6 +70,11 @@ struct IconApplier {
     }
 
     func refreshDock() {
+        // El icono se escribe correctamente en el bundle, pero para apps ancladas
+        // y firmadas (p.ej. Cyberduck) el Dock re-lee el icono desde la caché de
+        // IconServices en lugar del bundle. Matar al agente invalida su caché;
+        // ambos procesos se relanzan solos y no requieren sudo.
+        killall("iconservicesagent")
         killall("Dock")
     }
 
