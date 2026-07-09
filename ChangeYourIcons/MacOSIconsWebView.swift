@@ -25,15 +25,28 @@ struct MacOSIconsWebView: NSViewRepresentable {
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
         context.coordinator.state = state
+        context.coordinator.searchIfNeeded(for: state.target?.name)
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate {
         var state: AppState
         weak var webView: WKWebView?
         private var destinations: [ObjectIdentifier: URL] = [:]
+        private var lastSearchedName: String?
 
         init(state: AppState) {
             self.state = state
+        }
+
+        /// Busca automáticamente el nombre de la app seleccionada en macosicons.com.
+        /// La comprobación contra `lastSearchedName` evita recargar en bucle, ya que
+        /// `updateNSView` se invoca ante cualquier cambio publicado del `AppState`.
+        func searchIfNeeded(for name: String?) {
+            guard let name, name != lastSearchedName else { return }
+            lastSearchedName = name
+            guard let encoded = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                  let url = URL(string: "https://macosicons.com/?query=\(encoded)") else { return }
+            webView?.load(URLRequest(url: url))
         }
 
         func webView(_ webView: WKWebView,
