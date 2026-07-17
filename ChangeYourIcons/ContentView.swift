@@ -8,8 +8,11 @@ struct ContentView: View {
         HSplitView {
             sidebar
                 .frame(minWidth: 320, idealWidth: 360, maxWidth: 440)
-            MacOSIconsWebView()
-                .frame(minWidth: 600)
+            VStack(spacing: 0) {
+                webToolbar
+                MacOSIconsWebView()
+            }
+            .frame(minWidth: 600)
         }
         .onAppear { state.loadLibraries() }
     }
@@ -54,6 +57,10 @@ struct ContentView: View {
             } else {
                 Text("No app selected.")
                     .foregroundStyle(.secondary)
+            }
+
+            if !state.savedIcons.isEmpty {
+                savedIconsGallery
             }
 
             statusView
@@ -113,7 +120,7 @@ struct ContentView: View {
                 if let icon = state.lastDownloadedIcon {
                     state.apply(iconURL: icon)
                 } else {
-                    state.setStatus("Download an icon from macosicons.com first.", error: true)
+                    state.setStatus("Download an icon from the panel on the right first.", error: true)
                 }
             } label: {
                 Label("Apply last downloaded icon", systemImage: "checkmark.circle")
@@ -130,6 +137,84 @@ struct ContentView: View {
             }
             .controlSize(.large)
             .disabled(target.isSystemProtected)
+        }
+    }
+
+    private var webToolbar: some View {
+        HStack(spacing: 8) {
+            Picker("", selection: $state.webSource) {
+                ForEach(IconWebSource.allCases) { src in
+                    Text(src.rawValue).tag(src)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+            .help("Choose the icon source")
+
+            Button {
+                state.reloadWeb()
+            } label: {
+                Label("Reload icons", systemImage: "arrow.clockwise")
+            }
+            .controlSize(.large)
+            .buttonStyle(.borderedProminent)
+            .help("Reload the icon gallery (fixes thumbnails that failed to load)")
+
+            Text("If some icons appear blank, click Reload — previews load lazily.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            Spacer()
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(.bar)
+    }
+
+    private var savedIconsGallery: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Downloaded icons")
+                .font(.subheadline).bold()
+                .foregroundStyle(.secondary)
+
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 8)], spacing: 8) {
+                    ForEach(state.savedIcons) { icon in
+                        savedIconCell(icon)
+                    }
+                }
+            }
+            .frame(maxHeight: 160)
+        }
+    }
+
+    @ViewBuilder
+    private func savedIconCell(_ icon: SavedIcon) -> some View {
+        Group {
+            if let thumb = icon.thumbnail {
+                Image(nsImage: thumb)
+                    .resizable()
+            } else {
+                Image(systemName: "photo")
+                    .resizable()
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .aspectRatio(contentMode: .fit)
+        .frame(width: 48, height: 48)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .help(icon.name)
+        .contentShape(Rectangle())
+        .onTapGesture { state.apply(iconURL: icon.url) }
+        .contextMenu {
+            Button(role: .destructive) {
+                state.deleteSavedIcon(icon)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 
