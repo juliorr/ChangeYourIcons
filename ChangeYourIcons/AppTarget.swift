@@ -33,7 +33,7 @@ enum PermissionHint {
 final class AppState: ObservableObject {
     @Published var target: AppTarget?
     @Published var lastDownloadedIcon: URL?
-    @Published var status: String = "Choose an app and find an icon on macosicons.com."
+    @Published var status: String = "Choose an app and find an icon in the panel on the right."
     @Published var isError: Bool = false
     @Published var permissionHint: PermissionHint = .none
 
@@ -42,11 +42,38 @@ final class AppState: ObservableObject {
     @Published var source: AppSource = .dock
     @Published var query: String = ""
 
+    /// Fuente web de iconos activa en el panel derecho (macOS Icons / Flaticon).
+    @Published var webSource: IconWebSource = .macosIcons
+
+    @Published var savedIcons: [SavedIcon] = []
+
+    /// Se incrementa para pedir al `WKWebView` que recargue la página actual.
+    /// Útil porque macosicons.com sirve miniaturas de forma diferida y a veces
+    /// devuelve 504 en algunas imágenes; recargar suele resolverlas.
+    @Published var webReloadCounter = 0
+
     let applier = IconApplier()
+    let iconLibrary = IconLibrary()
+
+    func reloadWeb() {
+        webReloadCounter += 1
+    }
 
     func loadLibraries() {
         dockApps = AppLibrary.dockApps()
         installedApps = AppLibrary.installedApps()
+        reloadSavedIcons()
+    }
+
+    func reloadSavedIcons() {
+        savedIcons = iconLibrary.all()
+    }
+
+    @MainActor
+    func deleteSavedIcon(_ icon: SavedIcon) {
+        iconLibrary.delete(icon.url)
+        if lastDownloadedIcon == icon.url { lastDownloadedIcon = nil }
+        reloadSavedIcons()
     }
 
     var visibleApps: [AppTarget] {
