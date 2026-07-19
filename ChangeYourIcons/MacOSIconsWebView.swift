@@ -8,6 +8,7 @@ enum IconWebSource: String, CaseIterable, Identifiable {
     case flaticon   = "Flaticon"
     case icons8     = "Icons8"
     case iconIcons  = "Icon-Icons"
+    case theSVG     = "The SVG"
 
     var id: String { rawValue }
 
@@ -17,6 +18,7 @@ enum IconWebSource: String, CaseIterable, Identifiable {
         case .flaticon:   return URL(string: "https://www.flaticon.com")!
         case .icons8:     return URL(string: "https://icons8.com/icons/")!
         case .iconIcons:  return URL(string: "https://icon-icons.com")!
+        case .theSVG:     return URL(string: "https://thesvg.org")!
         }
     }
 
@@ -31,6 +33,7 @@ enum IconWebSource: String, CaseIterable, Identifiable {
         case .flaticon:   return URL(string: "https://www.flaticon.com/search?word=\(encoded)")
         case .icons8:     return URL(string: "https://icons8.com/icons/set/\(encoded)")
         case .iconIcons:  return URL(string: "https://icon-icons.com/search?q=\(encoded)")
+        case .theSVG:     return URL(string: "https://thesvg.org/?q=\(encoded)")
         }
     }
 }
@@ -281,22 +284,11 @@ struct MacOSIconsWebView: NSViewRepresentable {
             guard let fileURL = destinations[ObjectIdentifier(download)] else { return }
             destinations[ObjectIdentifier(download)] = nil
             Task { @MainActor in
-                // SVG no se puede aplicar como icono: NSImage no lo rasteriza para
-                // NSWorkspace.setIcon. Avisamos y pedimos la versión PNG en vez de
-                // aplicarlo o marcarlo como último icono descargado.
-                if fileURL.pathExtension.lowercased() == "svg" {
-                    state.setStatus("Downloaded an SVG — SVG can't be applied as an app icon. " +
-                                    "Download the PNG version instead.", error: true)
-                    return
-                }
-                state.lastDownloadedIcon = fileURL
-                state.reloadSavedIcons()
-                if state.target != nil {
-                    state.apply(iconURL: fileURL)
-                } else {
-                    state.setStatus("Icon downloaded (\(fileURL.lastPathComponent)). " +
-                                    "Choose an app and click “Apply”.")
-                }
+                // Un SVG (p.ej. de thesvg.org) no se puede aplicar tal cual: NSImage no lo
+                // rasteriza para NSWorkspace.setIcon. `importDownloadedFile` lo convierte a
+                // PNG y, si no lo es, lo aplica directamente. Flujo compartido con la subida
+                // manual de iconos.
+                state.importDownloadedFile(fileURL)
             }
         }
     }

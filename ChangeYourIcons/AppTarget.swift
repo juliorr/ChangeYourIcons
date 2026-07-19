@@ -54,6 +54,8 @@ final class AppState: ObservableObject {
 
     let applier = IconApplier()
     let iconLibrary = IconLibrary()
+    /// Convierte SVGs a PNG (thesvg.org, subidas .svg) para poder aplicarlos como icono.
+    let rasterizer = SVGRasterizer()
 
     func reloadWeb() {
         webReloadCounter += 1
@@ -142,6 +144,70 @@ final class AppState: ObservableObject {
             setStatus("Icon applied to “\(target.name)”. Dock restarted.")
         } catch {
             setError(error, prefix: "Couldn't apply the icon")
+        }
+    }
+
+    /// Procesa un archivo recién descargado por el WebView. Si es un SVG lo rasteriza a PNG;
+    /// en otro caso continúa con el flujo normal (recordar, refrescar galería y aplicar).
+    @MainActor
+    func importDownloadedFile(_ fileURL: URL) {
+        if fileURL.pathExtension.lowercased() == "svg" {
+            rasterizeAndApply(svgAt: fileURL, deletingSourceAfter: true)
+        } else {
+            finishImportedIcon(fileURL)
+        }
+    }
+
+    /// Importa un icono elegido del disco por el usuario. Un `.svg` se rasteriza a PNG; el
+    /// resto de formatos (png/jpg/tiff/icns) se copian a la librería y se aplican.
+    @MainActor
+    func importLocalIcon(from sourceURL: URL) {
+        if sourceURL.pathExtension.lowercased() == "svg" {
+            rasterizeAndApply(svgAt: sourceURL, deletingSourceAfter: false)
+            return
+        }
+        let dest = iconLibrary.destinationURL(for: sourceURL.lastPathComponent)
+        do {
+            try FileManager.default.copyItem(at: sourceURL, to: dest)
+            finishImportedIcon(dest)
+        } catch {
+            setStatus("Couldn't import the icon: \(error.localizedDescription)", error: true)
+        }
+    }
+
+    /// Rasteriza un SVG a PNG en la librería y sigue con el flujo normal. `deleteSource`
+    /// borra el `.svg` de origen tras convertirlo (útil para descargas, que ya cayeron en la
+    /// librería; no para subidas, cuyo origen está fuera y no queremos tocar).
+    @MainActor
+    private func rasterizeAndApply(svgAt svgURL: URL, deletingSourceAfter deleteSource: Bool) {
+        let stem = svgURL.deletingPathExtension().lastPathComponent
+        let dest = iconLibrary.destinationURL(for: "\(stem.isEmpty ? "icon" : stem).png")
+        setStatus("Converting SVG to a usable icon…")
+        rasterizer.rasterize(svgAt: svgURL, to: dest) { [weak self] result in
+            Task { @MainActor in
+                guard let self else { return }
+                if deleteSource { try? FileManager.default.removeItem(at: svgURL) }
+                switch result {
+                case .success(let pngURL):
+                    self.finishImportedIcon(pngURL)
+                case .failure(let error):
+                    self.setStatus("Couldn't convert the SVG: \(error.localizedDescription)", error: true)
+                }
+            }
+        }
+    }
+
+    /// Cola común tras obtener un icono aplicable: recordarlo, refrescar la galería y
+    /// aplicarlo si hay una app seleccionada.
+    @MainActor
+    private func finishImportedIcon(_ fileURL: URL) {
+        lastDownloadedIcon = fileURL
+        reloadSavedIcons()
+        if target != nil {
+            apply(iconURL: fileURL)
+        } else {
+            setStatus("Icon ready (\(fileURL.lastPathComponent)). " +
+                      "Choose an app and click “Apply”.")
         }
     }
 
