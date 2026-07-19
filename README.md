@@ -1,8 +1,8 @@
 # ChangeYourIcons
 
-A native macOS app (Swift + SwiftUI, macOS 14+) for changing the icon of any installed application, using icons from [macosicons.com](https://macosicons.com).
+A native macOS app (Swift + SwiftUI, macOS 14+) for changing the icon of any installed application, using icons you browse and download from popular icon sites — or your own files.
 
-Instead of relying on the macosicons API, the app embeds the real website in a `WKWebView`, so you browse and download icons exactly as you would in a browser. When you download an `.icns`, it's applied to the app you've selected and the Dock is refreshed automatically.
+Instead of relying on any API, the app embeds the real icon websites in a `WKWebView`, so you browse and download icons exactly as you would in a browser. When you download an icon, it's applied to the app you've selected and the Dock is refreshed automatically.
 
 ![ChangeYourIcons screenshot](docs/screenshot.png)
 
@@ -10,8 +10,11 @@ Instead of relying on the macosicons API, the app embeds the real website in a `
 
 - **Pick any app** — choose from a list of the apps in your **Dock**, from **all** installed applications, or browse to any other location.
 - **Search** installed apps by name.
-- **Browse macosicons.com** in an embedded web view and download an icon like a normal web user (no API key required).
-- **Apply & restore** — apply a downloaded icon or revert an app to its original icon; the Dock is restarted so the change shows immediately.
+- **Multiple icon sources** — browse [macosicons.com](https://macosicons.com), [Flaticon](https://www.flaticon.com), [Icons8](https://icons8.com), [Icon-Icons](https://icon-icons.com), and [The SVG](https://thesvg.org) in an embedded web view (no API key required). Selecting an app auto-searches its name in the active source.
+- **Upload from your computer** — use a local icon file directly (`png`, `jpg`, `tiff`, `icns`, or `svg`).
+- **Automatic SVG conversion** — SVG icons (e.g. from The SVG, or your own uploads) can't be applied natively, so they're rendered offscreen to a 1024px transparent PNG and applied for you.
+- **Downloaded icons gallery** — every icon you download or import is saved and reusable; click to re-apply or right-click to delete.
+- **Apply & restore** — apply an icon or revert an app to its original icon; the Dock is restarted so the change shows immediately.
 - Apps protected by SIP (under `/System/Applications`) are flagged and skipped.
 
 ## Build & run
