@@ -41,6 +41,12 @@ struct ContentView: View {
                 } label: {
                     Label("Other location…", systemImage: "folder")
                 }
+                Button {
+                    chooseIcon()
+                } label: {
+                    Label("Upload icon…", systemImage: "square.and.arrow.up")
+                }
+                .help("Use an icon from your computer (png, jpg, tiff, icns, svg)")
                 Spacer()
                 Button {
                     state.loadLibraries()
@@ -142,13 +148,12 @@ struct ContentView: View {
 
     private var webToolbar: some View {
         HStack(spacing: 8) {
-            Picker("", selection: $state.webSource) {
+            Picker("Source", selection: $state.webSource) {
                 ForEach(IconWebSource.allCases) { src in
                     Text(src.rawValue).tag(src)
                 }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+            .pickerStyle(.menu)
             .fixedSize()
             .help("Choose the icon source")
 
@@ -302,6 +307,22 @@ struct ContentView: View {
         panel.prompt = "Choose"
         if panel.runModal() == .OK, let url = panel.url {
             state.select(AppTarget(url: url))
+        }
+    }
+
+    /// Elige un archivo de icono del disco y lo importa (SVG se rasteriza a PNG; el resto se
+    /// aplica directamente). Reutiliza el flujo `AppState.importLocalIcon`.
+    private func chooseIcon() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        var types: [UTType] = [.png, .jpeg, .tiff, .svg]
+        if let icns = UTType(filenameExtension: "icns") { types.append(icns) }
+        panel.allowedContentTypes = types
+        panel.prompt = "Use icon"
+        if panel.runModal() == .OK, let url = panel.url {
+            state.importLocalIcon(from: url)
         }
     }
 }

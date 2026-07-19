@@ -14,6 +14,7 @@
 		BB0000000000000000000005 /* MacOSIconsWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000005 /* MacOSIconsWebView.swift */; };
 		BB0000000000000000000008 /* AppLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000008 /* AppLibrary.swift */; };
 		BB0000000000000000000010 /* IconLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000010 /* IconLibrary.swift */; };
+		BB0000000000000000000011 /* SVGRasterizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000011 /* SVGRasterizer.swift */; };
 		BB0000000000000000000009 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000009 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +29,7 @@
 		AA0000000000000000000007 /* ChangeYourIcons.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ChangeYourIcons.entitlements; sourceTree = "<group>"; };
 		AA0000000000000000000008 /* AppLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLibrary.swift; sourceTree = "<group>"; };
 		AA0000000000000000000010 /* IconLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconLibrary.swift; sourceTree = "<group>"; };
+		AA0000000000000000000011 /* SVGRasterizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGRasterizer.swift; sourceTree = "<group>"; };
 		AA0000000000000000000009 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -60,6 +62,7 @@
 				AA0000000000000000000005 /* MacOSIconsWebView.swift */,
 				AA0000000000000000000008 /* AppLibrary.swift */,
 				AA0000000000000000000010 /* IconLibrary.swift */,
+				AA0000000000000000000011 /* SVGRasterizer.swift */,
 				AA0000000000000000000009 /* Assets.xcassets */,
 				AA0000000000000000000006 /* Info.plist */,
 				AA0000000000000000000007 /* ChangeYourIcons.entitlements */,
@@ -151,6 +154,7 @@
 				BB0000000000000000000005 /* MacOSIconsWebView.swift in Sources */,
 				BB0000000000000000000008 /* AppLibrary.swift in Sources */,
 				BB0000000000000000000010 /* IconLibrary.swift in Sources */,
+				BB0000000000000000000011 /* SVGRasterizer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
